@@ -1,0 +1,34 @@
+{
+  "sourceCommit": "3756e8f7655697443641e5a8ed0704d2cb4da615",
+  "sourceProject": "ShellPilot",
+  "sourceHint": "../ai-ssh-terminal-server-rust",
+  "license": "Apache-2.0",
+  "capturedAt": "2026-10-21",
+  "notes": "Selected source files were clean relative to HEAD at extraction. Other upstream working-tree edits were preserved. This is an extraction snapshot; ShellPilot does not yet depend on this crate.",
+  "files": [
+    {
+      "sourceSha256": "81395d429f9257f2783f39157174a1e89e23d0e0c0ab3fb96c1b8b02aeaf5a4f",
+      "target": "crates/atelier-agent-core/src/strict_json.rs",
+      "source": "src/agent/strict_json.rs",
+      "changes": "Make parse and parse_slice public; formatting only otherwise."
+    },
+    {
+      "sourceSha256": "3a900cc8efc8557b0b3c102931400533ac4653e16fea2fba7e64e30a13505dbd",
+      "target": "crates/atelier-agent-core/src/schema.rs",
+      "source": "src/agent/tool_loop/schema.rs",
+      "changes": "Make Schema public; point strict_json reference to crate::strict_json; formatting only otherwise."
+    },
+    {
+      "sourceSha256": "9e439930899b81053c030991a0d3044a81072b2c2b4de28c1cb977d4ad0331ad",
+      "target": "crates/atelier-agent-core/src/budget.rs",
+      "source": "src/agent/budget.rs",
+      "changes": "Extract ModelBudget/InputCosts/HistoryGroup/Plan and estimate_text; retain checked add. Leave ShellPilot Event-specific estimation/group_history in the host for later event adapter."
+    },
+    {
+      "sourceSha256": "c3d5fa95bf442f67e6c4b760378f3e2f9e4578a9ac5e14339203718ab2843881",
+      "target": "crates/atelier-agent-core/src/tools.rs",
+      "source": "src/agent/tool_loop.rs",
+      "changes": "Adapt ToolRegistry definition validation to standalone ToolDefinition/ValidatedArguments; no model loop, authorization hook or executor copied."
+    }
+  ]
+}

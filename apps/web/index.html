@@ -1,0 +1,15 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#f8f8f7"/><title>Atelier — Creative Workspace</title></head><body><div id="root"><div id="initial-loading" style="padding:36px;color:#444;font-family:Segoe UI,sans-serif">正在加载 Atelier…</div></div>
+<script>
+(function(){
+  if(!['localhost','127.0.0.1'].includes(location.hostname))return;
+  var original='正在加载 Atelier…';
+  function fail(message){
+    var loading=document.getElementById('initial-loading');
+    if(loading){loading.style.whiteSpace='pre-wrap';loading.style.color='#9b2525';loading.textContent='Atelier 前端脚本加载失败。请按 F12 查看 Console。\n\n'+String(message||'未知错误');}
+  }
+  window.addEventListener('error',function(e){fail((e.error&&e.error.stack)||e.message||e.target&&e.target.src);});
+  window.addEventListener('unhandledrejection',function(e){fail(e.reason&&e.reason.stack||e.reason);});
+  setTimeout(function(){var loading=document.getElementById('initial-loading');if(loading && loading.textContent===original)loading.textContent='Atelier 等待脚本加载超时。请按 F12 检查 Console 与 Network。';},8000);
+})();
+</script>
+<script type="module" src="/src/main.tsx"></script></body></html>

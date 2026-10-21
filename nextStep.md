@@ -1,0 +1,65 @@
+# Atelier 下一步与跨会话续接
+
+更新：2026-10-21。每完成一步并确认通过后必须更新本文件；先核对实际 Git/源码再继续，不能仅依赖聊天。
+
+## 最新用户要求
+
+- 开发文档覆盖整个 Atelier：Google 登录/注册、用户权限、画布、素材、图片/视频生成、Agent/工具审批/上下文压缩/长期记忆、积分/签到/支付/订阅、后台与部署运维。
+- 文档先落盘再逐步实现；每步通过后更新 nextStep.md。
+- 完成本轮后初始化并提交/推送到 `https://github.com/jasonlat-dot/atelier_canvas.git`。
+- 不打包、不部署生产；保护既有修改，不覆盖 ShellPilot 来源仓库的工作。
+
+## 已完成并验证的步骤
+
+### R0/R1：Agent 第一批基础（前一步实测）
+
+- `crates/atelier-agent-core/` 提取严格 JSON、工具参数 Schema/白名单与上下文预算；16 项 Rust 测试通过。
+- `services/api/src/agent.rs` 增加认证后的 `/api/v1/agent/capabilities`；2 项宿主测试通过，核心能力与用户功能分开。
+- `apps/web/src/features/chat/ChatPage.tsx`、`types.ts`、`lib/api.ts` 接能力状态，移除虚构 token/已完成能力文案；HTTP 模式未接入真实对话时禁用发送，Mock 保留明确演示。
+- `tests/verify_http.cjs` 检查 HTTP/Mock 能力、401 不回退伪造状态及既有保存/任务/钱包；前端回归和类型检查通过。
+- `scripts/verify-agent.ps1` 实际运行通过；核心/API 格式检查和 4 个来源 SHA256 核对通过。
+- 这不是完整 Agent 完成：模型对话、审批执行、摘要压缩、长期记忆服务均未接入。
+
+### PLAN-01/02：完整项目开发文档与入口（本步核验）
+
+- [总开发文档](docs/PROJECT_DEVELOPMENT.md)：覆盖全部产品模块、当前状态、数据/API 设计、S0–S8 依赖顺序、待决策项和验收；包括旧原型的新 React 尚缺的积分策略/系统设置页。
+- [工作规则](AGENTS.md)、[README](README.md)、[项目进度](docs/AGENT_PROGRESS.md)、[Agent 子计划](docs/AGENT_REUSE_PLAN.md) 已统一入口，并补记中断前 R1 的实际通过结果。
+- 文档模块覆盖检查、唯一任务 ID 检查、已有本地链接检查通过；下一步文档已按用户要求在核验后写入本文件。最终链接和提交前检查另列实际回执。
+
+## 仓库状态
+
+- 目标：`https://github.com/jasonlat-dot/atelier_canvas.git`。
+- 初次远程只读查询未返回任何 refs；尚未将该结果当成已推送。
+- 本地已初始化 main 分支并配置 origin，远程确认空仓库；待提交内容与忽略项检查通过。初始提交与推送正在执行，成功后更新回执。换电脑先核对远程与 git log。
+
+## 未完成与环境限制
+
+- 浏览器 Tabbit 创建页面仍报 `Target.createTarget: Task-scoped CDP command could not be dispatched`；已结束任务。仅开发模块 200，未验收渲染/交互。
+- 尚未真实连接 PostgreSQL，也未验收 Google、S3、供应商、支付。PATH 中此前未找到 Docker/psql；需核对新电脑环境。
+- 当前仍有画布 debounce 离开丢保存风险、revision 冲突恢复、多标签页同步及 count>1 只生成/展示一个资产的问题。
+- 具体 Google 邮箱范围、供应商、支付渠道、套餐/订阅、奖励/文本收费等见总文档 DEC-01–08；尚未确定的价格均不能用原型数字直接上线。
+
+## 下一项与通过标准
+
+1. **本轮收尾：PLAN-03、REPO-01/02。** 执行现有检查、核对忽略/提交文件，初始化 Git、提交、推送并核对远程，成功后更新本文件的回执。
+2. **下一开发阶段：S1 / BASE-03。** 在一次性 PostgreSQL 环境验证现有 SQLx 迁移，增加身份/项目/revision/任务/余额/取消的真实数据库集成基线；不能使用生产数据。入口：`services/api/src/main.rs`、`services/api/migrations/`、`infra/compose.yaml`。
+3. S1 通过标准：两个开发身份隔离；项目保存/刷新；旧 revision 拒绝；任务提交与预占原子；同键并发、余额不足回滚、取消不重复退款。测试与源码位置写入项目进度并更新本文件。
+4. 然后处理 CAN-03/GEN-08，再按 S2 Google/权限/奖励、S3 钱包/媒体、S4 图片、S5–S6 Agent/视频、S7 支付订阅后台推进。Agent R2 是子任务，不取代整个项目计划。
+
+## 复验与继续指令
+
+```powershell
+# 项目根目录，不打包；首次安装依赖见总文档
+./scripts/verify-agent.ps1
+```
+
+新会话可直接使用：
+
+> 继续 Atelier 项目。先读根目录 AGENTS.md、nextStep.md、docs/PROJECT_DEVELOPMENT.md、docs/AGENT_PROGRESS.md，核对 Git/源码/环境，再按 nextStep 的下一项工作；涉及 Agent 再读子计划。保留已有修改，每完成一步并确认通过后更新 nextStep.md，不打包、不生产部署。
+
+Git 同步源码和文档，不同步数据库、浏览器草稿或密钥。换电脑必须克隆/拉取完整项目并重建本地配置；来源和锁文件已随项目保留。
+## 本步提交前复验回执
+
+- 本次重新执行 scripts/verify-agent.ps1：前端回归、13 个 TS/TSX 转译及类型检查通过；独立核心 16 项、API 2 项和 cargo check 通过。
+- 总文档 125 个唯一任务项、19 项模块覆盖检查通过；所有已跟踪 Markdown 的本地链接与凭据模式扫描通过。
+- .env、node_modules、target 与本地产物均未跟踪；仅提交示例环境配置。已添加 .gitattributes 统一跨电脑文本换行。
