@@ -11,7 +11,7 @@
 - [x] `scripts/verify-agent.ps1` 已实际运行通过；4 个 ShellPilot 来源文件哈希一致。源码来源与许可在 third_party/shellpilot；未修改来源仓库。
 - [x] 新增 `docs/PROJECT_DEVELOPMENT.md` 全项目总文档，包含功能清单、现状、数据/API 设计、里程碑、待决策项和验收；Agent 清单保留为子计划。文档最终核验与 nextStep 见下方本轮记录。
 - [ ] PostgreSQL、真实 Google/图片/视频/支付未联调；浏览器 Target.createTarget 错误仍使视觉与交互验收未完成，不能标通过。
-- [ ] 本次 Git 初始化/提交/推送执行情况以根目录 nextStep 及实际 Git 回执为准，尚未核验前不称已同步。
+- [x] 本次 Git 已初始化 main，初始提交 4b36ada 已成功推送至用户仓库，并核对远程 main SHA 一致；最新文档回执见 nextStep。
 - 下一阶段按总计划 S1：优先建立一次性 PostgreSQL 集成基线，随后处理现有画布保存与批量产物问题；Agent R2 仍是后续子任务。
 ## 项目定位与范围
 
@@ -74,3 +74,5 @@ cargo test --offline
 - [x] PLAN-01/02/03：总开发文档含 125 个任务项；19 项模块覆盖、任务 ID 和本地链接核验通过，根目录 nextStep.md 已在验证后写入，AGENTS/README/Agent 子计划已统一入口。
 - [x] 提交前重新运行 scripts/verify-agent.ps1：前端回归/类型检查、核心 16 项/API 2 项和 cargo check 均通过。数据库与浏览器仍未验收。
 - [x] Git 已初始化 main，origin 指向用户仓库；确认远程无 refs，已检查不提交真实环境配置、凭据或生成产物。提交/推送成功回执后补记。
+
+- [x] REPO-01/02 完成：初始提交 4b36ada 已推送 origin/main，远程 SHA 与本地基线一致；随后同步本次交接回执。来源仓库未改；无打包或生产部署。下一开发项 S1 / BASE-03。

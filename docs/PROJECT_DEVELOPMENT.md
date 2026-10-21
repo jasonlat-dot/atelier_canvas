@@ -463,7 +463,13 @@ cargo test --locked --offline --manifest-path services/api/Cargo.toml
 - [x] PLAN-01：本文覆盖全部原型功能、用户补充的 Agent 需求、缺失后台页与跨电脑工作规则，完成内容核验。
 - [x] PLAN-02：统一 AGENTS/README/项目进度/Agent 子计划入口，纠正中断留下的 R1 旧状态。
 - [x] PLAN-03：文档验证通过后写入 nextStep.md，记录基础测试和数据库/浏览器边界。
-- [ ] REPO-01：初始化 Git，核对提交内容与忽略项，创建初始提交。
-- [ ] REPO-02：推送用户指定仓库并核对远程提交；更新 nextStep 的仓库回执。
+- [x] REPO-01：初始化 Git，核对提交内容与忽略项，创建初始提交。
+- [x] REPO-02：推送用户指定仓库并核对远程提交；更新 nextStep 的仓库回执。
 
 本次只补齐全项目文档、续接记录和用户授权的仓库初始化；后续业务实现按 S1 开始，不将文档范围扩大误写为功能已完成。
+### S0 本次验收回执
+
+- PLAN-01/02/03 已通过：总清单 125 项、19 项模块覆盖、9 份 Markdown 本地链接检查通过，nextStep.md 已生成。
+- 本次 scripts/verify-agent.ps1 通过：前端回归、13 个 TS/TSX 语法/类型检查、Rust 核心 16 项/API 2 项及 cargo check。数据库/浏览器/真实外部服务仍未验收。
+- REPO-01/02 已通过：main 初始提交 4b36ada 已推送至用户仓库，并用 git ls-remote 核对远程与本地提交一致；后续本次交接补记也提交同步，实际最新 HEAD 用 Git 核对。
+- 不含真实 .env/密钥、node_modules、target、dist；本轮未打包或生产部署。下一项为 S1 / BASE-03。

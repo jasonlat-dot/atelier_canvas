@@ -29,8 +29,8 @@
 ## 仓库状态
 
 - 目标：`https://github.com/jasonlat-dot/atelier_canvas.git`。
-- 初次远程只读查询未返回任何 refs；尚未将该结果当成已推送。
-- 本地已初始化 main 分支并配置 origin，远程确认空仓库；待提交内容与忽略项检查通过。初始提交与推送正在执行，成功后更新回执。换电脑先核对远程与 git log。
+- 初始化前远程为空；推送后已创建 main，配置为跟踪 origin/main。
+- 初始基线提交 `4b36ada` 已成功推送；已用 git ls-remote 验证远程 main 与本地基线完整 SHA 一致。本次交接回执作为后续文档提交同步，最新提交以 git log / origin/main 核对，不依赖自引用哈希。
 
 ## 未完成与环境限制
 
@@ -41,7 +41,7 @@
 
 ## 下一项与通过标准
 
-1. **本轮收尾：PLAN-03、REPO-01/02。** 执行现有检查、核对忽略/提交文件，初始化 Git、提交、推送并核对远程，成功后更新本文件的回执。
+1. **本轮 PLAN-01/02/03、REPO-01/02 已完成。** 全项目文档、基础复验、初始提交与推送均有回执；仓库包含本项目源代码、锁文件、示例配置、测试与交接文档。
 2. **下一开发阶段：S1 / BASE-03。** 在一次性 PostgreSQL 环境验证现有 SQLx 迁移，增加身份/项目/revision/任务/余额/取消的真实数据库集成基线；不能使用生产数据。入口：`services/api/src/main.rs`、`services/api/migrations/`、`infra/compose.yaml`。
 3. S1 通过标准：两个开发身份隔离；项目保存/刷新；旧 revision 拒绝；任务提交与预占原子；同键并发、余额不足回滚、取消不重复退款。测试与源码位置写入项目进度并更新本文件。
 4. 然后处理 CAN-03/GEN-08，再按 S2 Google/权限/奖励、S3 钱包/媒体、S4 图片、S5–S6 Agent/视频、S7 支付订阅后台推进。Agent R2 是子任务，不取代整个项目计划。
@@ -63,3 +63,10 @@ Git 同步源码和文档，不同步数据库、浏览器草稿或密钥。换�
 - 本次重新执行 scripts/verify-agent.ps1：前端回归、13 个 TS/TSX 转译及类型检查通过；独立核心 16 项、API 2 项和 cargo check 通过。
 - 总文档 125 个唯一任务项、19 项模块覆盖检查通过；所有已跟踪 Markdown 的本地链接与凭据模式扫描通过。
 - .env、node_modules、target 与本地产物均未跟踪；仅提交示例环境配置。已添加 .gitattributes 统一跨电脑文本换行。
+
+## 仓库同步成功回执
+
+- 远程：https://github.com/jasonlat-dot/atelier_canvas.git ，分支 main。
+- 首次推送：4b36ada（chore: initialize Atelier with Rust agent core and full development plan），Git 返回 new branch main -> main。
+- 推送后远程 refs/heads/main 与本地初始提交 SHA 核对一致；首次禁用交互认证失败，随后正常 Git 凭据助手认证推送成功，无待用户登录事项。
+- 下一位从 S1 / BASE-03 开始，执行前先 git pull、git status 并读取全项目文档；本次不继续扩大实现范围。
