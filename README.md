@@ -2,6 +2,8 @@
 
 全项目开发与续接入口：[总开发文档](docs/PROJECT_DEVELOPMENT.md) · [下一步](nextStep.md) · [项目进度](docs/AGENT_PROGRESS.md) · [Agent 子计划](docs/AGENT_REUSE_PLAN.md)。
 
+当前开发顺序：供应商/模型管理 → 普通对话 → 上下文压缩 → 画布能力 → Google 注册登录 → 积分与商业化。详见总开发文档 v1.1，旧原型说明不代表当前实施优先级。
+
 > **2026-10-21 续开发实测**：已修复 Windows 测试入口、HTTP JSON 请求头和钱包同步；当前验证、限制和后续任务见 [开发进度](docs/AGENT_PROGRESS.md)。下文为原型交付说明，历史验证状态请以进度文件为准。
 
 > 基于你已确认的 **Codex 风格 Atelier UI**，推进为可维护的工程，而不是继续叠加单文件原型。

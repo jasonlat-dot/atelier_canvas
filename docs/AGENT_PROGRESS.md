@@ -12,7 +12,7 @@
 - [x] 新增 `docs/PROJECT_DEVELOPMENT.md` 全项目总文档，包含功能清单、现状、数据/API 设计、里程碑、待决策项和验收；Agent 清单保留为子计划。文档最终核验与 nextStep 见下方本轮记录。
 - [ ] PostgreSQL、真实 Google/图片/视频/支付未联调；浏览器 Target.createTarget 错误仍使视觉与交互验收未完成，不能标通过。
 - [x] 本次 Git 已初始化 main，初始提交 4b36ada 已成功推送至用户仓库，并核对远程 main SHA 一致；最新文档回执见 nextStep。
-- 下一阶段按总计划 S1：优先建立一次性 PostgreSQL 集成基线，随后处理现有画布保存与批量产物问题；Agent R2 仍是后续子任务。
+- 最新用户调整顺序：S1 管理端供应商/文本模型 → S2 普通对话（不压缩/不工具）→ S3 历史与普通对话压缩 → S4 画布/媒体/创作工具 → S5 Google 注册登录 → S6 积分奖励 → S7 支付订阅/后台 → S8 上线准备。必要数据库测试随对应功能做，不先展开整套钱包联调。
 ## 项目定位与范围
 
 - 独立项目：`E:/project/ShellPilot/Atelier_React_Rust_Starter`。React + TypeScript + React Flow 创作前端；Rust Axum + SQLx + PostgreSQL API。
@@ -75,4 +75,12 @@ cargo test --offline
 - [x] 提交前重新运行 scripts/verify-agent.ps1：前端回归/类型检查、核心 16 项/API 2 项和 cargo check 均通过。数据库与浏览器仍未验收。
 - [x] Git 已初始化 main，origin 指向用户仓库；确认远程无 refs，已检查不提交真实环境配置、凭据或生成产物。提交/推送成功回执后补记。
 
-- [x] REPO-01/02 完成：初始提交 4b36ada 已推送 origin/main，远程 SHA 与本地基线一致；随后同步本次交接回执。来源仓库未改；无打包或生产部署。下一开发项 S1 / BASE-03。
+- [x] REPO-01/02 完成：初始提交 4b36ada 已推送 origin/main，远程 SHA 与本地基线一致；随后同步本次交接回执。来源仓库未改；无打包或生产部署。该条历史安排已由最新供应商优先计划覆盖。
+
+## ORDER-01：用户调整开发顺序（2026-10-21）
+
+- 本步修改总计划 v1.1 的优先顺序和依赖，Agent R 编号保持稳定但基础 R3 先于 R2/R5；注册、积分及商业化后置。
+- S1 明确最小供应商/凭据管理、文本模型开放与测试连接，必要后端管理权限沿用本机开发身份；S2 只做普通对话，S3 再接压缩，S4 接画布。
+- 仅修改文档；原核心与前端/Rust 测试结果保留为历史，不当成本次重跑。文档验证通过后写入 nextStep。
+
+- [x] ORDER-01 已核验：S1→S7 顺序、Agent 子任务关联一致；保留全部 125 个唯一功能任务，文档本地链接和 diff 格式通过；随后已更新根目录 nextStep.md。只改文档，无新增业务完成项。
