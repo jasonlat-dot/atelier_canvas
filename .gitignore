@@ -17,3 +17,6 @@ target/
 *.sqlite
 *.sqlite3
 *.db
+
+# Local development credential encryption key
+.atelier/

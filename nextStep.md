@@ -1,87 +1,60 @@
 # Atelier 下一步与跨会话续接
 
-更新：2026-10-21。每完成一步并确认通过后必须更新本文件；先核对实际 Git/源码再继续，不能仅依赖聊天。
+更新：2026-10-22。本文件在每一步确认通过后更新；先核对源码/Git/环境，再按下一项继续。
 
-## 当前开发优先顺序（最新用户指令）
+## 用户要求与当前顺序
 
-管理端供应商/模型接入 → 普通对话测试（不压缩、不工具）→ 历史与普通对话上下文压缩 → 画布工作台/创作工具 → Google 注册登录 → 积分/签到/奖励 → 支付/订阅及其余功能。
+管理端供应商/模型接入 → 普通对话（先不接压缩/工具）→ 历史与普通对话压缩 → 画布工作台/创作工具 → Google 注册登录 → 积分奖励 → 支付订阅及其余功能。
 
-这个顺序覆盖旧版先注册/钱包的安排；前期使用本机 DEV_AUTH 开发身份和最小后端管理员授权，基础对话与画布开发不依赖正式 Google 或积分钱包。
+前期仅本机 DEV_AUTH 开发身份，后端最小管理员权限仍须验证。保留既有修改，不打包、不部署生产；源代码/文档按用户授权同步 `https://github.com/jasonlat-dot/atelier_canvas.git`。每步核验后更新本文件，不能只在聊天交接。
 
-## 最新用户要求
+## 最新完成：S1 首个文本渠道（2026-10-22）
 
-- 开发文档覆盖整个 Atelier：Google 登录/注册、用户权限、画布、素材、图片/视频生成、Agent/工具审批/上下文压缩/长期记忆、积分/签到/支付/订阅、后台与部署运维。
-- 文档先落盘再逐步实现；每步通过后更新 nextStep.md。
-- 完成本轮后初始化并提交/推送到 `https://github.com/jasonlat-dot/atelier_canvas.git`。
-- 不打包、不部署生产；保护既有修改，不覆盖 ShellPilot 来源仓库的工作。
+### 已实现且有测试的范围
 
-## 已完成并验证的步骤
+- `services/api/migrations/202610220001_text_providers.sql`：供应商、文本模型、最小管理审计；真实 PostgreSQL 迁移通过，不改旧迁移。
+- `services/api/src/providers.rs`：后端管理员检查、供应商新增/编辑/启停、revision、模型配置/开放、普通用户文本目录。供应商停用或模型关闭后从用户目录隐藏；图片/视频 Mock 目录独立保留。
+- `services/api/src/credentials.rs`：AES-256-GCM、随机 nonce、供应商 ID 绑定；不回传/打印密钥，缺少加密配置拒绝保存，无明文降级。支持保留/替换/移除；变更目的地址需显式重新提供或清除凭据。
+- 只读连接测试：Chat Completions 兼容渠道的 GET /models；10 秒总超时、响应体上限、重定向拒绝、失败分类和脱敏，不发送生成请求。
+- `apps/web/src/features/providers/ProviderConsole.tsx`、`types.ts`、`lib/providerApi.ts`：管理表单、获取上游模型、测试连接与状态；Mock 模式不保存/发送凭据。
+- `features/chat/ChatPage.tsx`：HTTP 用户可读取和选择已开放的文本模型；发送仍禁用，S2 普通对话未实现。
+- `scripts/start-dev-api.ps1` 与原 Rust 批处理：启动时可使用服务端环境密钥，或生成/复用忽略的 `.atelier/credential.key`。密钥/数据库需单独保护与恢复，不随 Git 同步。
+- [S1 使用/API/测试说明](docs/S1_PROVIDER_SETUP.md) 已写入，README/总计划/项目进度同步更新。
 
-### R0/R1：Agent 第一批基础（前一步实测）
+### 本步最终验证回执
 
-- `crates/atelier-agent-core/` 提取严格 JSON、工具参数 Schema/白名单与上下文预算；16 项 Rust 测试通过。
-- `services/api/src/agent.rs` 增加认证后的 `/api/v1/agent/capabilities`；2 项宿主测试通过，核心能力与用户功能分开。
-- `apps/web/src/features/chat/ChatPage.tsx`、`types.ts`、`lib/api.ts` 接能力状态，移除虚构 token/已完成能力文案；HTTP 模式未接入真实对话时禁用发送，Mock 保留明确演示。
-- `tests/verify_http.cjs` 检查 HTTP/Mock 能力、401 不回退伪造状态及既有保存/任务/钱包；前端回归和类型检查通过。
-- `scripts/verify-agent.ps1` 实际运行通过；核心/API 格式检查和 4 个来源 SHA256 核对通过。
-- 这不是完整 Agent 完成：模型对话、审批执行、摘要压缩、长期记忆服务均未接入。
+- `npm --prefix apps/web test`：16 个 TS/TSX 转译与原 Mock/HTTP 回归通过；新增供应商端点/方法/revision/403、保留密钥、Mock 禁用和不写本地存储断言通过。
+- `npm --prefix apps/web run typecheck`：通过。
+- `cargo test --locked --offline --manifest-path services/api/Cargo.toml`：**8 项通过、1 项数据库测试默认忽略**。
+- `./scripts/test-providers.ps1 -PgBin 'E:/softs/postgresql/bin'`：独立 PostgreSQL **12.18** 真实生产路由集成 **1 项通过**；测试脚本另建回环临时实例和 atelier_test_* 库，结束后关闭。原系统 PostgreSQL 服务未启动或修改。
+- 集成覆盖：无会话/普通用户/禁用用户拒绝、Origin 拒绝、无加密密钥不落库、密文、连接目录、保存/保留/移除、重开配置、revision 冲突、停用供应商/模型后的公开过滤、审计不含凭据。
+- `cargo clippy --locked --offline --manifest-path services/api/Cargo.toml --all-targets -- -D warnings`：通过。新增 Rust 模块 rustfmt 已执行；数据库集成测试不计入上面的 8 项。
+- 使用的供应商仅为本机合成回环服务，没有读取/调用用户真实供应商密钥。
 
-### PLAN-01/02：完整项目开发文档与入口（本步核验）
+## 仍待验收，不能标完整用户功能通过
 
-- [总开发文档](docs/PROJECT_DEVELOPMENT.md)：覆盖全部产品模块、当前状态、数据/API 设计、S0–S8 依赖顺序、待决策项和验收；包括旧原型的新 React 尚缺的积分策略/系统设置页。
-- [工作规则](AGENTS.md)、[README](README.md)、[项目进度](docs/AGENT_PROGRESS.md)、[Agent 子计划](docs/AGENT_REUSE_PLAN.md) 已统一入口，并补记中断前 R1 的实际通过结果。
-- 文档模块覆盖检查、唯一任务 ID 检查、已有本地链接检查通过；下一步文档已按用户要求在核验后写入本文件。最终链接和提交前检查另列实际回执。
-
-## 仓库状态
-
-- 目标：`https://github.com/jasonlat-dot/atelier_canvas.git`。
-- 初始化前远程为空；推送后已创建 main，配置为跟踪 origin/main。
-- 初始基线提交 `4b36ada` 已成功推送；已用 git ls-remote 验证远程 main 与本地基线完整 SHA 一致。本次交接回执作为后续文档提交同步，最新提交以 git log / origin/main 核对，不依赖自引用哈希。
-
-## 未完成与环境限制
-
-- 浏览器 Tabbit 创建页面仍报 `Target.createTarget: Task-scoped CDP command could not be dispatched`；已结束任务。仅开发模块 200，未验收渲染/交互。
-- 尚未真实连接 PostgreSQL，也未验收 Google、S3、供应商、支付。PATH 中此前未找到 Docker/psql；需核对新电脑环境。
-- 当前仍有画布 debounce 离开丢保存风险、revision 冲突恢复、多标签页同步及 count>1 只生成/展示一个资产的问题。
-- 具体 Google 邮箱范围、供应商、支付渠道、套餐/订阅、奖励/文本收费等见总文档 DEC-01–08；尚未确定的价格均不能用原型数字直接上线。
+- Tabbit 再次报 `Target.createTarget: Task-scoped CDP command could not be dispatched`，任务已正常 finish，未能进行真实页面点击/视觉验收。
+- 本次 UI 试验端口 5174 已被其他进程占用，新启动进程自行退出，未停止占用该端口的已有服务。没有证明浏览器页面运行成功。
+- 尚未用实际供应商完成 GET /models 测试；仅已验证回环协议和真实数据库链路。S1 代码/数据库子范围通过，完整浏览器/真实供应商验收仍待完成。
+- 普通对话发送、压缩、工具、长记忆、Google、正式钱包和支付仍未接入。
+- 既有画布保存、冲突恢复和 count>1 多产物问题保留在 S4。
 
 ## 下一项与通过标准
 
-1. **本步 ORDER-01 已完成并验证。** 总计划 v1.1、Agent 子计划、README/AGENTS/项目进度已统一顺序；原 125 个功能任务保留，没有把任何新业务标为已实现。本步只改文档，不重跑无关运行时测试。
-2. **下一开发阶段：S1 管理端供应商/文本模型接入。** 入口：`apps/web/src/features/admin/AdminPage.tsx`、`services/api/src/main.rs`、`services/api/migrations/`；拟拆分 providers/catalog 的持久化与管理接口。参考 ShellPilot provider 模块和来源记录，保护源仓库修改。
-3. **S1 的最小交付：** 管理员新增/编辑/启停一个文本供应商、保存服务端凭据、测试连接、配置并开放文本模型；普通用户可读开放目录。API 必须校验后端管理员角色，密钥不回传，保存/重启后仍可读取配置。
-4. **必要环境与验收：** 一次性 PostgreSQL 的供应商/模型迁移、管理权限、凭据掩码、停用/可见性、连接失败/超时测试；先回环供应商，再记录真实连接结果。数据库是该链路支撑，不先展开生成/钱包全量回归。
-5. **S2 然后做普通对话：** 使用 S1 开放模型，先单轮回复，再流式、停止、有界多轮、空模型/上游错误。没有压缩、工具、审批、记忆、画布或积分扣费；超限明确提示，不静默删除历史。
-6. **S3/S4 再增强：** S3 补持久历史/事件与普通对话压缩（R2→R5）；S4 做画布编辑保存、创作工具/审批、素材和图片视频，再补长期记忆；画布保存和多产物缺陷在对应启用前解决。
-7. **S5/S6 之后：** Google 注册登录、账户权限完善，再接正式积分钱包、注册/签到奖励；充值/支付/订阅与剩余运营接着做。公开上线前仍须完整认证/计费验收。
+1. **先补 S1 浏览器与真实供应商验收。** 按 [接入说明](docs/S1_PROVIDER_SETUP.md) 启动开发数据库/API，Web 使用 VITE_API_MODE=http；登录管理员，保存供应商、测试连接、设置/开放文本模型，刷新确认保存；普通身份应无法管理，并可在对话页读取开放模型。密钥通过管理表单填写，不在聊天或 Git 中传递。
+2. UI 验收包括失败/版本冲突、保留/移除密钥、供应商/模型启停及公开目录过滤。Tabbit 若仍不可用，明确记录环境限制，不把类型检查冒充浏览器验收。
+3. **随后 S2 / R3 基础普通对话。** 从服务端内部文本模型 ID 解析已开放配置/密钥；先单轮回复，再流式、停止、有界多轮和错误，保持工具/压缩/记忆/计费关闭。入口：providers.rs、agent.rs、ChatPage.tsx、ShellPilot provider 来源。
+4. S2 先建立回环供应商测试，验证模型绑定、停用、跨用户/切会话、停止与上游错误；有真实服务后单列真实对话验收。不能因 GET /models 通过就把 chat feature 标 true。
+5. S3 再做 R2 持久历史/事件和 R5 压缩；S4 接画布/素材/生成与 R4 工具审批；注册、积分仍后置。
 
-## 复验与继续指令
+## 仓库与文件状态
 
-```powershell
-# 项目根目录，不打包；首次安装依赖见总文档
-./scripts/verify-agent.ps1
-```
+- 分支 main，origin 为 `https://github.com/jasonlat-dot/atelier_canvas.git`。本步开始基线 b94f88d；本次 S1 作为后续提交同步，最新 HEAD/推送状态以 Git 核对，避免自引用哈希。
+- 本次修改了前后端、迁移、依赖锁文件、脚本、示例配置和文档；`.atelier/`、真实 .env、依赖与 target 已忽略。
+- 本机测试脚本的 PostgreSQL 路径只是实测参数；跨电脑用自己的 bin 路径或 PG_BIN。已提取核心代码自包含，后续迁移来源见 third_party/shellpilot/SOURCES.json；未修改 ShellPilot 来源仓库。
 
-新会话可直接使用：
+## 继续指令
 
-> 继续 Atelier 项目。先读根目录 AGENTS.md、nextStep.md、docs/PROJECT_DEVELOPMENT.md、docs/AGENT_PROGRESS.md，核对 Git/源码/环境，再按 nextStep 的下一项工作；涉及 Agent 再读子计划。保留已有修改，每完成一步并确认通过后更新 nextStep.md，不打包、不生产部署。
+> 继续 Atelier。先读 AGENTS.md、nextStep.md、docs/PROJECT_DEVELOPMENT.md、docs/AGENT_PROGRESS.md。S1 文本供应商/目录代码与真实 PostgreSQL 测试已过，浏览器和真实供应商仍待验收；先核对这些状态，再推进 S2 基础普通对话。保持用户确定的顺序，每完成一步确认通过后更新 nextStep.md，不打包、不生产部署，保护既有修改与凭据。
 
-Git 同步源码和文档，不同步数据库、浏览器草稿或密钥。换电脑必须克隆/拉取完整项目并重建本地配置；来源和锁文件已随项目保留。
-## 本步提交前复验回执
-
-- 本次重新执行 scripts/verify-agent.ps1：前端回归、13 个 TS/TSX 转译及类型检查通过；独立核心 16 项、API 2 项和 cargo check 通过。
-- 总文档 125 个唯一任务项、19 项模块覆盖检查通过；所有已跟踪 Markdown 的本地链接与凭据模式扫描通过。
-- .env、node_modules、target 与本地产物均未跟踪；仅提交示例环境配置。已添加 .gitattributes 统一跨电脑文本换行。
-
-## 仓库同步成功回执
-
-- 远程：https://github.com/jasonlat-dot/atelier_canvas.git ，分支 main。
-- 首次推送：4b36ada（chore: initialize Atelier with Rust agent core and full development plan），Git 返回 new branch main -> main。
-- 推送后远程 refs/heads/main 与本地初始提交 SHA 核对一致；首次禁用交互认证失败，随后正常 Git 凭据助手认证推送成功，无待用户登录事项。
-- 后续起点已按最新用户指令改为 S1 管理端供应商/文本模型接入；不要照旧的 BASE-03→注册/钱包顺序推进。执行前核对 Git 并读取最新总计划。
-
-## ORDER-01 本步验证回执（2026-10-21）
-
-- 已检查 S1→S7 顺序与 Agent R3→R2/R5→R4 关联一致。125 个功能任务 ID 保留且唯一，已有文档本地链接通过，git diff --check 通过。
-- 本次仅文档调整，未修改业务代码、迁移或测试；先前 16+2 项 Rust 与前端检查仍是历史结果。
-- 完成本步核验后更新本文件，下一项明确为供应商管理；本次顺序变更单独提交同步，最新提交与远程状态通过 Git 核对。
+历史 R0/R1、文档与仓库初始化、顺序调整的详情保存在 [项目进度](docs/AGENT_PROGRESS.md) 和 [Agent 子计划](docs/AGENT_REUSE_PLAN.md)。

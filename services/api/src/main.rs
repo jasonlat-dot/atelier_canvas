@@ -1,4 +1,6 @@
 mod agent;
+mod credentials;
+mod providers;
 use axum::{extract::{Path,State},http::{header,HeaderMap,StatusCode},response::{IntoResponse,Response},routing::{get,post},Json,Router};
 use chrono::{DateTime,Utc};
 use serde::Deserialize;
@@ -8,7 +10,7 @@ use std::{collections::HashMap,env,net::SocketAddr,sync::Arc,time::Duration};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-#[derive(Clone)] struct AppState{db:PgPool,sessions:Arc<RwLock<HashMap<String,Uuid>>>,dev_auth:bool}
+#[derive(Clone)] struct AppState{db:PgPool,sessions:Arc<RwLock<HashMap<String,Uuid>>>,dev_auth:bool,cipher:Option<Arc<credentials::CredentialCipher>>}
 #[derive(Debug)] struct ApiError(StatusCode,String);
 impl IntoResponse for ApiError{fn into_response(self)->Response{(self.0,Json(json!({"error":self.1}))).into_response()}}
 impl From<sqlx::Error> for ApiError{fn from(e:sqlx::Error)->Self{tracing::error!(error=%e,"database failure");Self(StatusCode::INTERNAL_SERVER_ERROR,"database error".into())}}
@@ -27,8 +29,16 @@ fn not_found()->ApiError{ApiError(StatusCode::NOT_FOUND,"not found".into())}
  let pool=PgPoolOptions::new().max_connections(12).connect(&db_url).await?;
  sqlx::migrate!("./migrations").run(&pool).await?;
  if dev_auth{seed_development_users(&pool).await?;}
- let state=Arc::new(AppState{db:pool,sessions:Arc::new(RwLock::new(HashMap::new())),dev_auth});
- let app=Router::new()
+ let cipher=credentials::CredentialCipher::from_env().map_err(|_|"invalid ATELIER_CREDENTIAL_KEY")?;
+ let state=Arc::new(AppState{db:pool,sessions:Arc::new(RwLock::new(HashMap::new())),dev_auth,cipher});
+ let app=app_router(state.clone());
+ if dev_auth{tokio::spawn(mock_worker(state.db.clone()));}
+ tracing::info!(%bind,dev_auth,"Atelier API listening");
+ let listener=tokio::net::TcpListener::bind(addr).await?;
+ axum::serve(listener,app).await?;Ok(())
+}
+fn app_router(state:Arc<AppState>)->Router{
+ Router::new()
   .route("/api/v1/health",get(||async{Json(json!({"ok":true,"mode":"foundation"}))}))
   .route("/api/v1/dev/login",post(dev_login))
   .route("/api/v1/me",get(me))
@@ -41,11 +51,8 @@ fn not_found()->ApiError{ApiError(StatusCode::NOT_FOUND,"not found".into())}
   .route("/api/v1/wallet",get(wallet))
   .route("/api/v1/assets",get(list_assets))
   .route("/api/v1/model-catalog",get(models))
-  .with_state(state.clone());
- if dev_auth{tokio::spawn(mock_worker(state.db.clone()));}
- tracing::info!(%bind,dev_auth,"Atelier API listening");
- let listener=tokio::net::TcpListener::bind(addr).await?;
- axum::serve(listener,app).await?;Ok(())
+  .merge(providers::routes())
+  .with_state(state)
 }
 async fn seed_development_users(db:&PgPool)->Result<(),sqlx::Error>{for (email,name,role,credits) in [
  ("mira@gmail.com","Mira Chen","USER",2680_i64),

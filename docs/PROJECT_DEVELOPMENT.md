@@ -1,6 +1,6 @@
 # Atelier 全项目开发文档与实施总清单
 
-版本：v1.1 ｜ 更新：2026-10-21 ｜ 状态：产品需求与工程实施基线，业务功能尚未全部实现。
+版本：v1.2 ｜ 更新：2026-10-22 ｜ 状态：产品需求与工程实施基线，业务功能尚未全部实现。
 
 本文覆盖整个软件，不仅是 Agent 迁移。新会话、新电脑从根目录 `AGENTS.md` 和 [`nextStep.md`](../nextStep.md) 开始，再读本文与 [项目进度](AGENT_PROGRESS.md)。Agent 详细来源和步骤在 [Agent 复用子计划](AGENT_REUSE_PLAN.md)。
 
@@ -55,9 +55,9 @@ Atelier 是统一的 AI 创作 Web 应用：用户使用 Google 账号进入，�
 | 积分/签到 | Mock；HTTP 余额/流水适配已修，正式账本未实现 | `mockDb.ts`、`api.ts`、`main.rs` |
 | 充值、支付、退款、订阅 | 套餐展示；无真实支付或订阅服务 | `App.tsx` |
 | 用量统计 | 演示计算，非完整计费/成本统计 | `App.tsx` |
-| 用户/模型/供应商后台 | 有演示页，HTTP 管理写接口未接通 | `AdminPage.tsx` |
+| 用户/模型/供应商后台 | 文本供应商/文本模型已接 HTTP 管理和用户目录，真实 PostgreSQL 回环集成通过；其他运营仍演示，浏览器/真实供应商待验收 | `AdminPage.tsx`、`ProviderConsole.tsx`、`services/api/src/providers.rs` |
 | 积分策略、系统设置后台 | 旧 HTML 原型有页面，新 React 尚缺正式页面/接口 | `Atelier_上一版离线预览.html` |
-| 运维与发布 | 本地 PostgreSQL compose；无正式部署验收 | `infra/compose.yaml` |
+| 运维与发布 | compose 与独立 PostgreSQL 测试脚本；无正式部署验收 | `infra/compose.yaml`、`scripts/test-providers.ps1` |
 
 以上测试为前一实现步骤的实测记录；本次文档编辑不替代重跑测试，也不证明真实业务联调。
 
@@ -121,7 +121,7 @@ Google 注册在本文指“使用 Google 身份创建 Atelier 用户”，不�
 
 - [x] BASE-01：已有 Windows 前端测试、HTTP 适配回归和 TypeScript 检查；命令见第 10 节，结果见进度。
 - [x] BASE-02：Agent 核心与 API 宿主可离线编译测试；16 + 2 项通过，来源哈希/许可已记录。
-- [ ] BASE-03：建立一次性 PostgreSQL 测试环境并验证初始迁移；生产与测试数据分离。
+- [x] BASE-03：一次性 PostgreSQL 12.18 测试环境与初始/S1 迁移已通过生产路由集成；与原系统服务和生产数据分离，范围见 S1 接入说明。
 - [ ] BASE-04：拆分统一错误、配置与启动生命周期；验证环境变量、优雅停止、开发/生产开关。
 - [ ] BASE-05：建立迁移兼容、锁文件安装、CI 测试、格式检查和文档检查流程。
 - [ ] BASE-06：解决画布未保存退出、存储满、版本冲突以及批量产物数量问题；详见 CAN/GEN。
@@ -331,7 +331,7 @@ Google 注册在本文指“使用 Google 身份创建 Atelier 用户”，不�
 
 ## 5. 数据设计与不变量
 
-下表是目标领域模型。当前迁移仅包含 `users/projects/assets/generation_jobs/wallet_ledger` 基础字段；其余需新增迁移。已部署迁移不原地改写。
+下表是目标领域模型。当前迁移包含 `users/projects/assets/generation_jobs/wallet_ledger` 基础字段，以及 S1 的 `text_providers/text_models/provider_admin_events`；其余需新增迁移。已部署迁移不原地改写。
 
 | 领域 | 目标表/实体与关键字段 | 必须保持的不变量 |
 |---|---|---|
@@ -374,11 +374,11 @@ Google 注册在本文指“使用 Google 身份创建 Atelier 用户”，不�
 | 生成 | `POST /generation/quotes`、`GET/POST /generation/jobs`、`POST .../{id}/cancel` | 报价 ID/版本、任务详情/事件、受控重试、供应商回调 |
 | 素材 | `GET /assets` | 上传申请/完成、详情/下载/删除、处理状态与分页 |
 | 钱包 | `GET /wallet` | 预占/结算口径、流水分页、奖励状态/签到、quote 详情 |
-| 目录 | `GET /model-catalog` | 真实能力/价格版本、用户可见过滤 |
+| 目录 | `GET /model-catalog`（图片/视频 Mock）、`GET /text-model-catalog`（真实文本配置过滤） | 更多协议/能力与正式价格版本 |
 | 支付 | 无 | 套餐、订单创建/查询、支付回调、退款申请与状态 |
 | 订阅 | 无 | 计划、当前订阅、订购/变更/取消、周期权益 |
 | 用量/通知 | 无独立真实接口 | 汇总/任务明细、通知/已读、授权搜索 |
-| 后台 | 无正式管理 API | users/models/providers/pricing/settings/orders/subscriptions/audit 的受控接口 |
+| 后台 | `GET/POST /admin/providers`、`PUT /admin/providers/{id}`、`POST .../{id}/test`、`GET/POST /admin/text-models`、`PUT /admin/text-models/{id}` | 其余 users/高级路由/pricing/settings/orders/subscriptions/audit 受控接口 |
 
 设计接口应在对应阶段形成请求/响应 DTO、权限、错误码、幂等键、分页、并发和事件契约。写接口返回是否真正提交成功，不能“先 Toast 成功再等后台”。财务/任务幂等键需绑定完整规范化请求，不能只比对 project/model/prompt。
 
@@ -505,3 +505,9 @@ cargo test --locked --offline --manifest-path services/api/Cargo.toml
 ### ORDER-01：实施顺序调整（2026-10-21）
 
 按用户最新指令更新：先管理端供应商/模型，再普通对话，再历史/压缩与画布，最后注册、积分和商业化；保留原任务 ID 与已完成 Rust 基础。文档一致性验证通过后更新 nextStep；本次不修改运行时代码，不重复宣称历史功能测试为新验收。
+
+### S1 首个文本渠道实施（2026-10-22）
+
+- 管理端/后端/普通用户目录已接线；支持一个 Chat Completions 兼容协议的配置、加密凭据、连接测试、文本模型开放和停用过滤。详情见 [S1 供应商接入说明](S1_PROVIDER_SETUP.md)。
+- 对应 PROVIDER-01、MODEL-01/02、ADMIN-03/04 的文本最小子范围，不表示这些模块的全部高级能力已完成。BASE-03 的初始与新增迁移在独立 PostgreSQL 12.18 通过。
+- S1 数据库/接口验证与前端类型检查通过；浏览器仍被 Tabbit 建页错误阻断，真实供应商尚未配置测试。S1 完整用户验收保持待完成，S2 发送仍禁用。最终测试数量/回执见 nextStep。

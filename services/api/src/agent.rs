@@ -53,6 +53,7 @@ mod tests {
                 .unwrap(),
             sessions: Arc::new(RwLock::new(HashMap::new())),
             dev_auth: false,
+            cipher: None,
         });
         let mut headers = HeaderMap::new();
         assert_eq!(

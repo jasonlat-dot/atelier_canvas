@@ -1,3 +1,5 @@
+import {listTextModelCatalog} from '../../lib/providerApi';
+import type {PublicTextModel} from '../providers/types';
 import {useEffect,useRef,useState} from 'react';
 import {ArrowUp,Plus,MessageSquare,CornerDownRight,Sparkles} from 'lucide-react';
 import * as api from '../../lib/api';
@@ -20,6 +22,9 @@ function ChatWorkspace(){
  const [capabilities,setCapabilities]=useState<AgentCapabilities|null>(null);
  const [capabilityError,setCapabilityError]=useState('');
  const [attempt,setAttempt]=useState(0);
+ const [textModels,setTextModels]=useState<PublicTextModel[]>([]);
+ const [selectedModel,setSelectedModel]=useState('');
+ const [modelError,setModelError]=useState('');
  const bottom=useRef<HTMLDivElement>(null);
  const replyTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const msgs=threads[thread]||[];
@@ -28,6 +33,12 @@ function ChatWorkspace(){
   let live=true;setCapabilities(null);setCapabilityError('');
   void api.getAgentCapabilities().then(value=>{if(live)setCapabilities(value);})
    .catch(()=>{if(live)setCapabilityError('无法读取 Agent 状态，请检查后端连接后重试。');});
+  return()=>{live=false;};
+ },[attempt]);
+ useEffect(()=>{
+  let live=true;setModelError('');
+  void listTextModelCatalog().then(models=>{if(live){setTextModels(models);setSelectedModel(id=>models.some(m=>m.id===id)?id:models[0]?.id||'');}})
+   .catch(()=>{if(live)setModelError('无法读取文本模型目录，请检查连接后重试。');});
   return()=>{live=false;};
  },[attempt]);
  useEffect(()=>()=>{if(replyTimer.current!==null)clearTimeout(replyTimer.current);},[]);
@@ -54,8 +65,9 @@ function ChatWorkspace(){
    <p className="empty-caption">{api.BACKEND_MODE?'服务端会话尚未接入。':'演示会话仅保留在当前页面，刷新后清空。'}</p>
   </aside>
   <section className="conversation">
-   <div className="chat-header"><div><strong>{thread}</strong><p>{api.BACKEND_MODE?'Rust 模式 · 真实对话尚未接入':'Mock 模式 · 模拟建议'}</p></div></div>
+   <div className="chat-header"><div><strong>{thread}</strong>{api.BACKEND_MODE&&<label className="chat-model-picker">文本模型<select aria-label="文本模型" className="select" value={selectedModel} onChange={e=>setSelectedModel(e.target.value)}><option value="">{textModels.length?'请选择模型':'管理员尚未开放文本模型'}</option>{textModels.map(m=><option key={m.id} value={m.id}>{m.label}</option>)}</select></label>}<p>{api.BACKEND_MODE?'Rust 模式 · 真实对话尚未接入':'Mock 模式 · 模拟建议'}</p></div></div>
    {capabilityError&&<div className="chat-status-banner" role="alert">{capabilityError}<button className="text-action" onClick={()=>setAttempt(a=>a+1)}>重试</button></div>}
+   {modelError&&<div className="chat-status-banner" role="alert">{modelError}<button className="text-action" onClick={()=>setAttempt(a=>a+1)}>重试</button></div>}
    {api.BACKEND_MODE&&<div className="chat-status-banner" role="status">对话内核正在接入。接通模型与会话服务后开放发送。</div>}
    <div className="chat-messages">{msgs.map(m=><div key={m.id} className={`chat-msg ${m.role}`}><div className="message-avatar">{m.role==='assistant'?<Sparkles size={16}/>:<span>我</span>}</div><div><div className="message-bubble">{m.body}</div><small>{m.role==='assistant'?'Atelier 演示':'你'}{m.timestamp&&` · ${m.timestamp}`}</small></div></div>)}
     {loading&&<div className="chat-msg assistant"><div className="message-avatar"><Sparkles size={16}/></div><div className="message-bubble">正在整理模拟建议…</div></div>}
