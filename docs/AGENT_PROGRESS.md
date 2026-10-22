@@ -98,3 +98,5 @@ cargo test --offline
 - [x] ORDER-01 已核验：S1→S7 顺序、Agent 子任务关联一致；保留全部 125 个唯一功能任务，文档本地链接和 diff 格式通过；随后已更新根目录 nextStep.md。只改文档，无新增业务完成项。
 
 - S1 交接：前后端/数据库子范围已验证，S1 浏览器及真实供应商验收仍未通过，S2 发送保持关闭。UI 测试端口 5174 被已有服务占用，未停止该服务；Tabbit 建页也失败。不得据此宣称真实 UI 可用。详细启动、协议和密钥恢复见 docs/S1_PROVIDER_SETUP.md。
+
+- [x] S1 实现提交 9b56b14 已推送并核对远程 main SHA，原 PostgreSQL 服务保持 Stopped；本次无打包/真实供应商调用。交接回执追加至 nextStep 并同步。
